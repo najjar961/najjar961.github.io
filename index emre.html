@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Etiketten-Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kaushan+Script&family=Playfair+Display:ital,wght@0,800;1,500&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f4f5f0;--card:#fff;--ink:#1f2420;--muted:#6b7268;--acc:#3f9a3a;--line:#e1e5dc}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+  header{padding:18px 16px 6px;max-width:1100px;margin:auto}
+  h1{font-size:22px;margin:0;font-weight:800}
+  header p{margin:4px 0 0;color:var(--muted);font-size:14px}
+  main{max-width:1100px;margin:auto;padding:12px 16px 40px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+  @media(max-width:820px){main{grid-template-columns:1fr}.preview{order:-1}.sticky{position:static!important}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+  .card h2{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px}
+  label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin:10px 0 4px}
+  input,select,textarea{width:100%;font:inherit;font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fdfefb;color:var(--ink)}
+  textarea{min-height:56px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 10px;font-size:13px;cursor:pointer;font-family:inherit}
+  .hint{font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.45}
+  .stage{display:flex;flex-direction:column;gap:14px;align-items:center;padding:14px;background:#e9ece4;border-radius:10px}
+  .stage canvas{width:100%;max-width:420px;height:auto;filter:drop-shadow(0 3px 7px rgba(0,0,0,.2))}
+  #front{max-width:220px}
+  .btn{display:block;width:100%;border:0;border-radius:11px;padding:13px;font:inherit;font-weight:800;font-size:16px;cursor:pointer;margin-top:10px}
+  .btn.main{background:var(--acc);color:#fff}
+  .btn.alt{background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:600;font-size:14px}
+  .msg{font-size:13px;margin-top:8px;min-height:18px}
+  .themes{display:flex;gap:8px;margin-top:4px}
+  .sw{width:34px;height:34px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);cursor:pointer}
+  .sw.on{box-shadow:0 0 0 2px var(--ink)}
+  .sticky{position:sticky;top:10px}
+  .nut{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+  .nut label{margin-top:6px;font-size:11px}
+  details summary{cursor:pointer;font-weight:600;font-size:14px;padding:4px 0}
+  .check{display:flex;gap:8px;align-items:center;font-weight:400;color:var(--ink);font-size:14px}
+  .check input{width:auto}
+</style>
+</head>
+<body>
+<header>
+  <h1>Etiketten-Generator</h1>
+  <p>Für selbst abgefüllte Nüsse, Trockenfrüchte und Süßes. Ausfüllen, dann als PDF auf A4 herunterladen und drucken.</p>
+</header>
+<main>
+  <section>
+    <div class="card">
+      <h2>Dein Laden <span style="text-transform:none;letter-spacing:0;font-weight:400">(wird gemerkt)</span></h2>
+      <div class="row">
+        <div><label>Name (groß oben)</label><input id="shop" placeholder="z. B. Mein Laden"></div>
+        <div><label>Slogan darunter</label><input id="slogan" placeholder="z. B. Nüsse & Trockenfrüchte"></div>
+      </div>
+      <label>Anschrift (Name, Straße, PLZ Ort)</label>
+      <input id="addr" placeholder="Mein Laden | Musterstr. 1 | 64283 Darmstadt">
+      <label>Kontakt (Telefon / Web / Instagram, optional)</label>
+      <input id="contact" placeholder="z. B. www.meinladen.de">
+    </div>
+
+    <div class="card">
+      <h2>Produkt</h2>
+      <label>Vorlage</label>
+      <select id="preset"></select>
+      <div class="row">
+        <div><label>Produktname</label><input id="name"></div>
+        <div><label>Art.-Nr. (optional)</label><input id="artnr"></div>
+      </div>
+      <div class="row3">
+        <div><label>Gewicht (g)</label><input id="weight" type="number" inputmode="decimal" min="1"></div>
+        <div><label>Preis (€)</label><input id="price" type="number" inputmode="decimal" step="0.01" min="0"></div>
+        <div><label>Grundpreis</label><input id="unit" readonly style="background:#eef1ea"></div>
+      </div>
+      <label class="check" style="margin-top:8px"><input type="checkbox" id="showPrice" checked> Preis aufs Etikett drucken</label>
+      <label>Zutaten (Allergene zwischen **Sternchen** = fett)</label>
+      <textarea id="ingr"></textarea>
+      <div class="row">
+        <div><label>Herkunft</label><input id="origin" placeholder="z. B. Türkei"></div>
+        <div><label>Lagerhinweis</label><input id="store"></div>
+      </div>
+      <label>Hinweis / Allergene</label>
+      <textarea id="allerg" style="min-height:44px"></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Datum &amp; Charge</h2>
+      <div class="row3">
+        <div><label>Abgefüllt am</label><input id="filled" type="date"></div>
+        <div><label>MHD</label><input id="mhd" type="date"></div>
+        <div><label>Los / Charge</label><input id="los"></div>
+      </div>
+      <div class="chips">
+        <span class="hint" style="margin:0">MHD:</span>
+        <button class="chip" data-m="3">+3 Mon.</button>
+        <button class="chip" data-m="6">+6 Mon.</button>
+        <button class="chip" data-m="9">+9 Mon.</button>
+        <button class="chip" data-m="12">+12 Mon.</button>
+      </div>
+      <p class="hint">Das MHD darf nicht später sein als das MHD auf der Großhändler-Packung, aus der du abfüllst. Am sichersten übernimmst du es 1:1.</p>
+    </div>
+
+    <div class="card">
+      <details>
+        <summary>Nährwerte pro 100 g (optional, von der Großhändler-Packung abschreiben)</summary>
+        <div class="nut">
+          <div><label>kJ</label><input id="n_kj" inputmode="decimal"></div>
+          <div><label>kcal</label><input id="n_kcal" inputmode="decimal"></div>
+          <div><label>Fett g</label><input id="n_fat" inputmode="decimal"></div>
+          <div><label>ges. Fetts. g</label><input id="n_sat" inputmode="decimal"></div>
+          <div><label>Kohlenh. g</label><input id="n_carb" inputmode="decimal"></div>
+          <div><label>Zucker g</label><input id="n_sug" inputmode="decimal"></div>
+          <div><label>Eiweiß g</label><input id="n_prot" inputmode="decimal"></div>
+          <div><label>Salz g</label><input id="n_salt" inputmode="decimal"></div>
+        </div>
+        <p class="hint">Leer lassen = keine Tabelle, der Text wird dann breiter.</p>
+      </details>
+    </div>
+
+    <div class="card">
+      <h2>Design &amp; Druck</h2>
+      <label>Farbe</label>
+      <div class="themes" id="themes"></div>
+      <div class="row">
+        <div><label>Haupt-Etikett</label>
+          <select id="msize"><option value="80">80 × 50 mm (10 pro Seite)</option><option value="90" selected>90 × 56 mm (8 pro Seite)</option><option value="100">100 × 62 mm (4 pro Seite)</option><option value="120">120 × 74 mm</option></select></div>
+        <div><label>Was drucken?</label>
+          <select id="what"><option value="main">Nur Haupt-Etikett</option><option value="both">Haupt + rundes Deckel-Etikett</option><option value="front">Nur Deckel-Etikett</option></select></div>
+      </div>
+      <div class="row">
+        <div><label>Deckel-Etikett (rund)</label>
+          <select id="dia"><option value="50">Ø 50 mm</option><option value="60">Ø 60 mm</option><option value="70" selected>Ø 70 mm</option><option value="80">Ø 80 mm</option></select></div>
+        <div><label>Anzahl Dosen</label><input id="count" type="number" min="1" value="1" inputmode="numeric"></div>
+      </div>
+      <label class="check" style="margin-top:10px"><input id="cut" type="checkbox" checked> Dünne Schnittlinie drucken</label>
+    </div>
+  </section>
+
+  <section class="preview">
+    <div class="sticky">
+      <div class="card">
+        <h2>Vorschau</h2>
+        <div class="stage">
+          <canvas id="mainL"></canvas>
+          <canvas id="front"></canvas>
+        </div>
+        <button class="btn main" id="pdf">PDF für A4 herunterladen</button>
+        <button class="btn alt" id="png">Haupt-Etikett als Bild (PNG)</button>
+        <button class="btn alt" id="asImg">A4-Seiten als Bild anzeigen (zum Drucken übers Handy)</button>
+        <div class="msg" id="msg"></div>
+        <div id="sheets"></div>
+        <p class="hint" id="fit"></p>
+        <p class="hint">Drucken: PDF öffnen → Drucken → <b>Tatsächliche Größe / 100 %</b> (nicht „An Seite anpassen“). Am besten auf selbstklebendes A4-Etikettenpapier drucken und ausschneiden.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const PX = 12; // Pixel pro mm (~300 dpi)
+
+const THEMES = {
+  gruen:{dark:"#2f8a35",light:"#a9d36a",foot:"#8cc04a",grad:["#c9e59a","#5f9e35"],ring:"#c9a64a",text:"#173016"},
+  orange:{dark:"#d35a1f",light:"#f6b47c",foot:"#ec8b4a",grad:["#f6b47c","#d4602a"],ring:"#c99a3c",text:"#3a1f0c"},
+  rot:{dark:"#a8282a",light:"#eea19a",foot:"#cf5752",grad:["#f0a090","#a8282a"],ring:"#d1aa52",text:"#fff4e6"},
+  braun:{dark:"#6e4223",light:"#d9b48a",foot:"#a8794d",grad:["#d9b48a","#7a4a26"],ring:"#d4b062",text:"#fff4e6"},
+  blau:{dark:"#245a8f",light:"#a9c8e6",foot:"#5f8fc0",grad:["#a9c8e6","#2d5d8f"],ring:"#cdb05a",text:"#fff8ec"}
+};
+
+// [Name, Zutaten, Herkunft, Hinweis, Nährwerte{kj,kcal,fat,sat,carb,sug,prot,salt}]
+const STORE = "Kühl, trocken und lichtgeschützt lagern.";
+const PRESETS = [
+  ["Nussmischung","**Cashewkerne**, **Mandeln**, **Walnusskerne**, **Paranusskerne**, **Haselnusskerne**","","Enthält Schalenfrüchte.",null],
+  ["Paranusskerne","100 % **Paranusskerne**","Bolivien","Enthält Paranusskerne. Kann Spuren von Erdnüssen und weiteren Schalenfrüchten enthalten.",{kj:2830,kcal:687,fat:67,sat:16,carb:2.6,sug:2.3,prot:15,salt:0.03}],
+  ["Cashewkerne","100 % **Cashewkerne**","","Enthält Cashewkerne.",null],
+  ["Mandeln","100 % **Mandeln**","","Enthält Mandeln.",null],
+  ["Walnusskerne","100 % **Walnusskerne**","","Enthält Walnüsse.",null],
+  ["Haselnusskerne","100 % **Haselnusskerne**","","Enthält Haselnüsse.",null],
+  ["Pistazien geröstet & gesalzen","**Pistazienkerne**, Speisesalz","","Enthält Pistazien.",null],
+  ["Erdnüsse geröstet & gesalzen","**Erdnüsse**, Speisesalz","","Enthält Erdnüsse.",null],
+  ["Studentenfutter","Sultaninen, **Haselnusskerne**, **Mandeln**, **Cashewkerne**, **Walnusskerne**","","Enthält Schalenfrüchte.",null],
+  ["Kürbiskerne","100 % Kürbiskerne","","",null],
+  ["Datteln","100 % Datteln","","",null],
+  ["Getrocknete Aprikosen","Aprikosen, Konservierungsstoff: **Schwefeldioxid**","","Enthält Sulfite.",null],
+  ["Eigenes Produkt","","","",null]
+];
+const NUT = ["kj","kcal","fat","sat","carb","sug","prot","salt"];
+
+// ---------- Speicher ----------
+const KEY="etiketten-v3";
+const SAVED=["shop","slogan","addr","contact","msize","dia","what","count"];
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||"{}"); }catch(e){ return {}; } }
+function persist(){ try{ const o={theme}; SAVED.forEach(k=>o[k]=$(k).value); localStorage.setItem(KEY,JSON.stringify(o)); }catch(e){} }
+
+// ---------- Datum ----------
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const de=s=>{ if(!s) return ""; const [y,m,d]=s.split("-"); return `${d}.${m}.${y}`; };
+function addMonths(s,n){ const d=new Date(s+"T12:00:00"); d.setMonth(d.getMonth()+n); return iso(d); }
+function losFor(s){ const d=new Date(s+"T12:00:00"); const start=new Date(d.getFullYear(),0,0); const day=Math.floor((d-start)/864e5); return "L"+String(d.getFullYear()).slice(2)+String(day).padStart(3,"0"); }
+const eur=v=>v.toLocaleString("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+const num=v=>{ const n=parseFloat(String(v).replace(",",".")); return isNaN(n)?null:n; };
+const fmt=n=>n.toLocaleString("de-DE",{maximumFractionDigits:2});
+
+// ---------- UI-Init ----------
+let theme="gruen", losAuto=true;
+const st=load();
+$("shop").value=st.shop ?? "Mein Laden";
+$("slogan").value=st.slogan ?? "Nüsse & Trockenfrüchte";
+$("addr").value=st.addr ?? "";
+$("contact").value=st.contact ?? "";
+["msize","dia","what","count"].forEach(k=>{ if(st[k]) $(k).value=st[k]; });
+if(st.theme && THEMES[st.theme]) theme=st.theme;
+
+PRESETS.forEach((p,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=p[0]; $("preset").appendChild(o); });
+function applyPreset(i){ const p=PRESETS[i]; $("name").value=p[0]; $("ingr").value=p[1]; $("origin").value=p[2]; $("allerg").value=p[3]; $("store").value=STORE;
+  NUT.forEach(k=>$("n_"+k).value = p[4] ? String(p[4][k]).replace(".",",") : ""); draw(); }
+$("preset").onchange=e=>applyPreset(+e.target.value);
+
+Object.keys(THEMES).forEach(k=>{ const s=document.createElement("div"); s.className="sw"; s.style.background=`linear-gradient(135deg, ${THEMES[k].light} 50%, ${THEMES[k].dark} 50%)`; s.dataset.k=k; s.onclick=()=>{theme=k;markTheme();persist();draw();}; $("themes").appendChild(s); });
+function markTheme(){ document.querySelectorAll(".sw").forEach(s=>s.classList.toggle("on",s.dataset.k===theme)); document.documentElement.style.setProperty("--acc",THEMES[theme].dark); }
+markTheme();
+
+const today=iso(new Date());
+$("filled").value=today; $("mhd").value=addMonths(today,6); $("los").value=losFor(today);
+$("weight").value=250; $("price").value="4.99";
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ $("mhd").value=addMonths($("filled").value||today,+c.dataset.m); draw(); });
+$("los").addEventListener("input",()=>{ losAuto=false; });
+$("filled").addEventListener("input",()=>{ if(losAuto && $("filled").value) $("los").value=losFor($("filled").value); });
+
+document.querySelectorAll("input,select,textarea").forEach(el=>{
+  if(el.id==="preset") return;
+  el.addEventListener("input",()=>{ if(SAVED.includes(el.id)) persist(); draw(); });
+});
+
+// ---------- Text-Helfer ----------
+function fit(c,text,weight,family,maxW,start,min){ let s=start; for(;s>min;s-=start/60){ c.font=`${weight} ${s}px ${family}`; if(c.measureText(text).width<=maxW) break; } c.font=`${weight} ${s}px ${family}`; return s; }
+function parseRich(str){ const words=[]; let bold=false;
+  str.split(/(\*\*)/).forEach(part=>{ if(part==="**"){bold=!bold;return;}
+    // "ns" = kein Leerzeichen davor (Satzzeichen direkt nach fettem Wort)
+    const lead=!/^\s/.test(part);
+    part.split(/\s+/).forEach((w,i)=>{ if(w) words.push({t:w,b:bold,ns:i===0&&lead&&words.length>0&&/^[,.;:!?)]/.test(w)}); }); });
+  return words; }
+function wrapRich(c,words,maxW,size,fam){ c.font=`400 ${size}px ${fam}`; const sp=c.measureText(" ").width; const lines=[]; let line=[],w=0;
+  for(const wd of words){ c.font=`${wd.b?800:400} ${size}px ${fam}`; const ww=c.measureText(wd.t).width; const gap=(line.length&&!wd.ns)?sp:0;
+    if(line.length&&!wd.ns&&w+gap+ww>maxW){lines.push(line);line=[];w=0;}
+    w+=((line.length&&!wd.ns)?sp:0)+ww; line.push({...wd,w:ww}); }
+  if(line.length) lines.push(line); return {lines,sp}; }
+function drawRich(c,res,x,y,size,lh,fam,color){ c.fillStyle=color; c.textAlign="left"; c.textBaseline="alphabetic";
+  res.lines.forEach((ln,i)=>{ let cx=x; ln.forEach((wd,j)=>{ if(j&&!wd.ns) cx+=res.sp; c.font=`${wd.b?800:400} ${size}px ${fam}`; c.fillText(wd.t,cx,y+i*lh); cx+=wd.w; }); }); }
+function rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+
+// ---------- Werte ----------
+function vals(){
+  const g=num($("weight").value)||0, p=num($("price").value)||0;
+  const unit=g>0&&p>0?eur(p/g*1000)+"/kg":""; $("unit").value=unit;
+  const n={}; NUT.forEach(k=>n[k]=num($("n_"+k).value));
+  const hasNut=NUT.some(k=>n[k]!==null);
+  const V=id=>$(id).value.trim();
+  return {shop:V("shop"),slogan:V("slogan"),addr:V("addr"),contact:V("contact"),name:V("name"),artnr:V("artnr"),g,p,unit,showPrice:$("showPrice").checked,
+    ingr:V("ingr"),origin:V("origin"),store:V("store"),allerg:V("allerg"),filled:$("filled").value,mhd:$("mhd").value,los:V("los"),n,hasNut};
+}
+
+// ---------- Haupt-Etikett (Design-Raster 100 × 62 mm) ----------
+const FAM="Inter, sans-serif";
+function drawMain(cv,wmm,v){
+  const T=THEMES[theme], k=wmm/100, hmm=62*k; cv.width=Math.round(wmm*PX); cv.height=Math.round(hmm*PX);
+  const c=cv.getContext("2d"); c.setTransform(PX*k,0,0,PX*k,0,0); c.clearRect(0,0,100,62);
+  // Rahmen + Fuß
+  c.save(); rr(c,0,0,100,62,2.4); c.clip();
+  c.fillStyle=T.light; c.fillRect(0,0,100,62);
+  c.fillStyle=T.foot; c.fillRect(0,55.6,100,6.4);
+  c.fillStyle="#fff"; rr(c,2,2,96,53.6,1.2); c.fill();
+  c.restore();
+
+  // Kopf: Ladenname
+  c.textAlign="center"; c.textBaseline="alphabetic"; c.fillStyle="#1f1f1f";
+  fit(c,(v.shop||"Mein Laden").toLowerCase(),800,FAM,52,7,3); c.fillText((v.shop||"Mein Laden").toLowerCase(),50,10.2);
+  if(v.slogan){ c.fillStyle="#2a2a2a"; fit(c,v.slogan,600,FAM,50,2.3,1.2); c.fillText(v.slogan,50,13.4); }
+
+  // Preis-Ecke
+  if(v.showPrice && v.p){
+    c.fillStyle="#1f1f1f"; rr(c,79,3.5,17,10,1.2); c.fill();
+    c.fillStyle="#fff"; c.textAlign="center"; fit(c,eur(v.p),800,FAM,15,4.2,2); c.fillText(eur(v.p),87.5,9);
+    if(v.unit){ fit(c,v.unit,600,FAM,15.5,1.7,1); c.fillText(v.unit,87.5,11.9); }
+  }
+
+  // Produkt-Balken
+  const nm=(v.name||"Produkt").toUpperCase();
+  c.fillStyle=T.dark; c.fillRect(21,15.2,64,8.6);
+  c.fillStyle="#fff"; c.textAlign="center"; c.textBaseline="middle";
+  fit(c,nm,800,FAM,60,5.4,2); c.fillText(nm,53,19.7);
+  // Gewichts-Fahne
+  if(v.g){ const gt=`${fmt(v.g)} g`; c.fillStyle="#1f1f1f"; c.beginPath(); c.moveTo(2,19.6); c.lineTo(16.5,19.6); c.lineTo(19,22.1); c.lineTo(16.5,24.6); c.lineTo(2,24.6); c.closePath(); c.fill();
+    c.fillStyle="#fff"; c.textAlign="center"; fit(c,gt,800,FAM,13,3.4,1.5); c.fillText(gt,9.5,22.2); }
+  c.textBaseline="alphabetic";
+
+  // Linke Spalte: Text
+  const x0=5, colW=v.hasNut?54:90, top=28, bottom=47.6;
+  const blocks=[];
+  const head=[v.artnr?`Art.-Nr. ${v.artnr}`:"", v.name].filter(Boolean).join(" ");
+  if(head) blocks.push({t:"**"+head+"**"});
+  if(v.ingr) blocks.push({t:"Zutaten: "+v.ingr, gap:0});
+  if(v.origin) blocks.push({t:"Herkunft: "+v.origin, gap:1});
+  const hint=v.allerg?{t:"Hinweis: "+v.allerg}:null;
+  let size=2.3, laidTop, laidHint, lh;
+  for(;size>1.15;size-=0.05){
+    lh=size*1.3; laidTop=blocks.map(b=>wrapRich(c,parseRich(b.t),colW,size,FAM));
+    laidHint=hint?wrapRich(c,parseRich(hint.t),colW,size*0.95,FAM):null;
+    let h=0; laidTop.forEach((l,i)=>{ h+=l.lines.length*lh+((blocks[i].gap||0)*size); });
+    const hh=laidHint?laidHint.lines.length*lh*0.95+size:0;
+    if(h+hh<=bottom-top) break;
+  }
+  let y=top+size;
+  laidTop.forEach((l,i)=>{ y+=(blocks[i].gap||0)*size; drawRich(c,l,x0,y,size,lh,FAM,"#222"); y+=l.lines.length*lh; });
+  if(laidHint){ const hs=size*0.95, hl=lh*0.95; const hy=bottom-(laidHint.lines.length-1)*hl; drawRich(c,laidHint,x0,Math.max(hy,y+size*0.6),hs,hl,FAM,"#333"); }
+
+  // Nährwerttabelle
+  if(v.hasNut){
+    const tx=61.5, tw=34, ty=27;
+    c.fillStyle="#1f1f1f"; c.fillRect(tx,ty,tw,3.3);
+    c.fillStyle="#fff"; c.textAlign="center"; fit(c,"Durchschnittliche Nährwerte pro 100 g",600,FAM,tw-1.4,1.7,1); c.fillText("Durchschnittliche Nährwerte pro 100 g",tx+tw/2,ty+2.35);
+    const n=v.n, g=x=>x===null?"–":fmt(x)+" g";
+    const rows=[["Brennwert",(n.kj!==null||n.kcal!==null)?`${n.kj!==null?fmt(n.kj):"–"} kJ / ${n.kcal!==null?fmt(n.kcal):"–"} kcal`:"–",true],
+      ["Fett",g(n.fat),true],["davon gesättigte Fettsäuren",g(n.sat),false],["Kohlenhydrate",g(n.carb),true],["davon Zucker",g(n.sug),false],["Eiweiß",g(n.prot),true],["Salz",g(n.salt),true]];
+    const rh=2.62; let ry=ty+3.3;
+    rows.forEach((r,i)=>{ const by=ry+rh*(i+1);
+      c.font=`${r[2]?800:400} 1.6px ${FAM}`; c.fillStyle="#222"; c.textAlign="left"; c.fillText(r[0],tx+0.6,by-0.75);
+      c.font=`400 1.6px ${FAM}`; c.textAlign="right"; c.fillText(r[1],tx+tw-0.6,by-0.75);
+      c.strokeStyle="#9a9a9a"; c.lineWidth=0.12; c.setLineDash([0.5,0.35]); c.beginPath(); c.moveTo(tx,by); c.lineTo(tx+tw,by); c.stroke(); c.setLineDash([]); });
+  }
+
+  // Lagerung / MHD / Los
+  const l1=[v.store, v.mhd?`Mindestens haltbar bis: ${de(v.mhd)}`:"", v.los].filter(Boolean).join(" ");
+  c.fillStyle="#222"; c.textAlign="left";
+  if(l1){ fit(c,l1,400,FAM,90,2.05,1.1); c.fillText(l1,5,51.3); }
+  if(v.filled){ c.font=`400 1.6px ${FAM}`; c.fillStyle="#555"; c.fillText(`Abgefüllt am: ${de(v.filled)}`,5,54.1); }
+
+  // Fußzeile
+  const foot=[v.addr||v.shop, v.contact].filter(Boolean).join("  |  ");
+  if(foot){ c.fillStyle="#fff"; c.textAlign="left"; fit(c,foot,800,FAM,90,2.2,1.1); c.fillText(foot,5,59.6); }
+}
+
+// ---------- Rundes Deckel-Etikett ----------
+function drawFront(cv,dmm,v){
+  const T=THEMES[theme], S=dmm*PX; cv.width=S; cv.height=S; const c=cv.getContext("2d");
+  const r=S/2, cx=r, cy=r; c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,S,S);
+  c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2); c.fillStyle="#fff"; c.fill();
+  c.beginPath(); c.arc(cx,cy,r*0.925,0,Math.PI*2); c.fillStyle=T.ring; c.fill();
+  const gr=c.createRadialGradient(cx-r*0.2,cy-r*0.25,r*0.05,cx,cy,r*0.9); gr.addColorStop(0,T.grad[0]); gr.addColorStop(1,T.grad[1]);
+  c.beginPath(); c.arc(cx,cy,r*0.9,0,Math.PI*2); c.fillStyle=gr; c.fill();
+  // Banner
+  const bw=r*1.12,bh=r*0.26,by=cy-r*0.5; c.save(); c.translate(cx,by);
+  c.fillStyle="#1f1f1f"; c.strokeStyle=T.ring; c.lineWidth=r*0.012;
+  c.beginPath(); c.moveTo(-bw/2,-bh/2); c.lineTo(bw/2,-bh/2); c.lineTo(bw/2+bh*0.25,0); c.lineTo(bw/2,bh/2); c.lineTo(-bw/2,bh/2); c.lineTo(-bw/2-bh*0.25,0); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle="#fff"; c.textAlign="center"; c.textBaseline="middle"; const sh=(v.shop||"Mein Laden").toLowerCase();
+  fit(c,sh,800,FAM,bw*0.92,bh*0.6,6); c.fillText(sh,0,0); c.restore();
+  // Name
+  c.textAlign="center"; c.textBaseline="alphabetic"; c.fillStyle=T.text;
+  const words=(v.name||"Produkt").split(" "); let l1=v.name||"Produkt", l2="";
+  c.font=`400 ${r*0.24}px "Kaushan Script", cursive`;
+  if(c.measureText(l1).width>r*1.5 && words.length>1){ const h=Math.ceil(words.length/2); l1=words.slice(0,h).join(" "); l2=words.slice(h).join(" "); }
+  const fam='"Kaushan Script", cursive';
+  if(!l2){ fit(c,l1,400,fam,r*1.55,r*0.26,8); c.fillText(l1,cx,cy+r*0.05); }
+  else { fit(c,l1,400,fam,r*1.5,r*0.22,8); c.fillText(l1,cx,cy-r*0.06); fit(c,l2,400,fam,r*1.45,r*0.17,8); c.fillText(l2,cx,cy+r*0.14); }
+  if(v.g){ c.font=`800 ${r*0.16}px "Playfair Display", serif`; c.fillText(`Netto: ${fmt(v.g)} g`,cx,cy+r*0.42); }
+  if(v.showPrice && v.p){ c.font=`800 ${r*0.12}px ${FAM}`; const pt=eur(v.p), pw=c.measureText(pt).width+r*0.16, ph=r*0.17, py=cy+r*0.6;
+    c.fillStyle="#1f1f1f"; rr(c,cx-pw/2,py-ph*0.78,pw,ph,ph/2); c.fill(); c.fillStyle="#fff"; c.fillText(pt,cx,py+ph*0.03);
+    if(v.unit){ c.font=`600 ${r*0.06}px ${FAM}`; c.fillStyle=T.text; c.fillText(`(${v.unit})`,cx,py+ph*0.62); } }
+  if(v.mhd){ c.font=`700 ${r*0.06}px ${FAM}`; c.fillStyle="#222"; arcBottom(c,`MHD: ${de(v.mhd)}`,cx,cy,r*0.96); }
+}
+function arcBottom(c,text,cx,cy,rad){ c.save(); c.textAlign="center"; c.textBaseline="middle"; const total=c.measureText(text).width/rad; let a=Math.PI/2+total/2;
+  for(const ch of text){ const w=c.measureText(ch).width/rad; a-=w/2; c.save(); c.translate(cx+Math.cos(a)*rad,cy+Math.sin(a)*rad); c.rotate(a-Math.PI/2); c.fillText(ch,0,0); c.restore(); a-=w/2; } c.restore(); }
+
+// ---------- Layout A4 ----------
+const mcv=$("mainL"), fcv=$("front");
+function layout(){
+  const mw=+$("msize").value, mh=mw*0.62, dia=+$("dia").value, what=$("what").value;
+  const n=Math.max(1,Math.min(300,parseInt($("count").value)||1)); const items=[];
+  if(what!=="front") for(let i=0;i<n;i++) items.push({k:"m",w:mw,h:mh});
+  if(what!=="main") for(let i=0;i<n;i++) items.push({k:"f",w:dia,h:dia});
+  const PW=210,PH=297,M=7,G=3; const pages=[[]]; let x=M,y=M,rowH=0,last=null;
+  for(const it of items){
+    if(last && last!==it.k){ x=M; y+=rowH+G; rowH=0; }
+    if(x+it.w>PW-M){ x=M; y+=rowH+G; rowH=0; }
+    if(y+it.h>PH-M){ pages.push([]); x=M; y=M; rowH=0; }
+    pages[pages.length-1].push({...it,x,y}); x+=it.w+G; rowH=Math.max(rowH,it.h); last=it.k;
+  }
+  return {pages,items};
+}
+function draw(){
+  const v=vals(), what=$("what").value;
+  drawMain(mcv,+$("msize").value,v); drawFront(fcv,+$("dia").value,v);
+  mcv.style.display=what==="front"?"none":""; fcv.style.display=what==="main"?"none":"";
+  const {pages,items}=layout();
+  $("fit").textContent=`${items.length} Etikett${items.length===1?"":"en"} → ${pages.length} A4-Seite${pages.length===1?"":"n"}.`;
+}
+
+// ---------- Download ----------
+let downloads=null;
+function msg(t,ok){ $("msg").textContent=t; $("msg").style.color=ok?"#2e7d32":"#a8282a"; }
+const fname=()=>($("name").value.trim()||"Etikett").replace(/[^\wäöüÄÖÜß\- ]/g,"").replace(/\s+/g,"-");
+// A4-Seiten als Bilder (funktioniert auch in der iPhone-Dateivorschau)
+function showSheets(){
+  const {pages}=layout(), S=8, box=$("sheets"); box.innerHTML="";
+  const t=document.createElement("p"); t.className="hint"; t.style.cssText="color:var(--ink);font-size:14px;margin:12px 0 8px";
+  t.innerHTML=`<b>So druckst du:</b> Bild unten <b>lange drücken</b> → <b>Teilen</b> (oder „In Fotos sichern“) → <b>Drucken</b>, Papier <b>A4</b>. ${pages.length>1?`Es sind ${pages.length} Seiten – jede einzeln.`:""}`;
+  box.appendChild(t);
+  pages.forEach((pg,i)=>{
+    const cv=document.createElement("canvas"); cv.width=210*S; cv.height=297*S; const c=cv.getContext("2d");
+    c.fillStyle="#fff"; c.fillRect(0,0,cv.width,cv.height); c.strokeStyle="#b8b8b8"; c.lineWidth=0.3*S;
+    pg.forEach(it=>{ const src=it.k==="m"?mcv:fcv; c.drawImage(src,it.x*S,it.y*S,it.w*S,it.h*S);
+      if($("cut").checked){ c.beginPath(); if(it.k==="m") c.rect((it.x-0.3)*S,(it.y-0.3)*S,(it.w+0.6)*S,(it.h+0.6)*S); else c.arc((it.x+it.w/2)*S,(it.y+it.h/2)*S,(it.w/2+0.3)*S,0,Math.PI*2); c.stroke(); } });
+    const img=new Image(); img.src=cv.toDataURL("image/png"); img.alt=`Etiketten Seite ${i+1}`;
+    img.style.cssText="width:100%;display:block;margin:8px 0;border:1px solid var(--line);border-radius:6px;-webkit-touch-callout:default";
+    box.appendChild(img);
+  });
+  box.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function fallbackLink(name,data,type){
+  const blob=data instanceof Blob?data:new Blob([data],{type});
+  const url=URL.createObjectURL(blob);
+  $("msg").innerHTML=""; const a=document.createElement("a"); a.href=url; a.download=name; a.target="_blank"; a.rel="noopener";
+  a.textContent="➜ "+name+" öffnen"; a.style.cssText="display:inline-block;font-weight:800;color:var(--acc);font-size:15px";
+  $("msg").appendChild(a);
+  try{ a.click(); }catch(e){}
+}
+async function saveFile(name,data,type){
+  if(!downloads){ fallbackLink(name,data,type); showSheets(); return; }
+  try{ await downloads.save({filename:name,data}); msg("Gespeichert ✓",true); }
+  catch(e){ if(e&&e.code==="declined") msg("Download abgebrochen."); else fallbackLink(name,data,type); }
+}
+
+// ---------- Eigener PDF-Writer (ohne externe Bibliothek) ----------
+function jpegOf(cv){ const t=document.createElement("canvas"); t.width=cv.width; t.height=cv.height; const c=t.getContext("2d");
+  c.fillStyle="#fff"; c.fillRect(0,0,t.width,t.height); c.drawImage(cv,0,0);
+  const b64=t.toDataURL("image/jpeg",0.93).split(",")[1], bin=atob(b64), u=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return {bytes:u,w:t.width,h:t.height}; }
+function buildPdf(pages,imgs,cut){
+  const K=72/25.4, PH=297, f=n=>(+n).toFixed(2), enc=new TextEncoder();
+  const names=Object.keys(imgs), firstPage=3+names.length, chunks=[], offs=[]; let len=0;
+  const put=x=>{ const b=typeof x==="string"?enc.encode(x):x; chunks.push(b); len+=b.length; };
+  const begin=n=>{ offs[n]=len; put(`${n} 0 obj\n`); };
+  put("%PDF-1.4\n%âãÏÓ\n");
+  begin(1); put("<< /Type /Catalog /Pages 2 0 R >>\nendobj\n");
+  begin(2); put(`<< /Type /Pages /Kids [${pages.map((_,i)=>`${firstPage+2*i} 0 R`).join(" ")}] /Count ${pages.length} >>\nendobj\n`);
+  names.forEach((nm,i)=>{ const im=imgs[nm]; begin(3+i);
+    put(`<< /Type /XObject /Subtype /Image /Width ${im.w} /Height ${im.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.bytes.length} >>\nstream\n`);
+    put(im.bytes); put("\nendstream\nendobj\n"); });
+  const res=`/XObject << ${names.map((nm,i)=>`/${nm} ${3+i} 0 R`).join(" ")} >>`;
+  pages.forEach((pg,pi)=>{
+    let s="0.72 G 0.4 w\n";
+    pg.forEach(it=>{ const nm=it.k==="m"?"Im0":"Im1", X=it.x*K, Y=(PH-it.y-it.h)*K, W=it.w*K, H=it.h*K;
+      s+=`q ${f(W)} 0 0 ${f(H)} ${f(X)} ${f(Y)} cm /${nm} Do Q\n`;
+      if(cut){ if(it.k==="m"){ const o=0.3*K; s+=`${f(X-o)} ${f(Y-o)} ${f(W+2*o)} ${f(H+2*o)} re S\n`; }
+        else { const r=(it.w/2+0.3)*K, cx=X+W/2, cy=Y+H/2, q=r*0.5523;
+          s+=`${f(cx+r)} ${f(cy)} m ${f(cx+r)} ${f(cy+q)} ${f(cx+q)} ${f(cy+r)} ${f(cx)} ${f(cy+r)} c ${f(cx-q)} ${f(cy+r)} ${f(cx-r)} ${f(cy+q)} ${f(cx-r)} ${f(cy)} c ${f(cx-r)} ${f(cy-q)} ${f(cx-q)} ${f(cy-r)} ${f(cx)} ${f(cy-r)} c ${f(cx+q)} ${f(cy-r)} ${f(cx+r)} ${f(cy-q)} ${f(cx+r)} ${f(cy)} c S\n`; } }
+    });
+    const pn=firstPage+2*pi; begin(pn);
+    put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << ${res} >> /Contents ${pn+1} 0 R >>\nendobj\n`);
+    const sb=enc.encode(s); begin(pn+1); put(`<< /Length ${sb.length} >>\nstream\n`); put(sb); put("\nendstream\nendobj\n");
+  });
+  const total=firstPage+2*pages.length, xref=len;
+  let x=`xref\n0 ${total}\n0000000000 65535 f \n`; for(let i=1;i<total;i++) x+=String(offs[i]).padStart(10,"0")+" 00000 n \n";
+  put(x); put(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  const out=new Uint8Array(len); let p=0; chunks.forEach(b=>{ out.set(b,p); p+=b.length; }); return out;
+}
+$("pdf").onclick=async()=>{
+  try{
+    draw(); const {pages}=layout();
+    const pdf=buildPdf(pages,{Im0:jpegOf(mcv),Im1:jpegOf(fcv)},$("cut").checked);
+    await saveFile(`Etiketten-${fname()}-${$("filled").value||today}.pdf`, pdf.buffer, "application/pdf");
+  }catch(e){ msg("PDF-Fehler: "+(e&&e.message||e)); }
+};
+$("asImg").onclick=()=>{ draw(); showSheets(); };
+$("png").onclick=()=>{ draw(); mcv.toBlob(b=>saveFile(`Etikett-${fname()}.png`,b,"image/png"),"image/png"); };
+
+// ---------- Start ----------
+applyPreset(0);
+Promise.all(['800 40px Inter','400 40px Inter','600 40px Inter','400 40px "Kaushan Script"','800 40px "Playfair Display"'].map(f=>document.fonts.load(f))).catch(()=>{}).finally(draw);
+document.fonts.ready.then(draw);
+(async()=>{ try{ if(window.claude&&claude.use) downloads=await claude.use("downloads"); }catch(e){} })();
+</script>
+</body>
+</html>
